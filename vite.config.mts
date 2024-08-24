@@ -10,13 +10,14 @@ import { fileURLToPath, URL } from 'node:url'
 // https://vitejs.dev/config/
 export default defineConfig({
   css: {
-    // add this to check missing source sass files: disabled by default
-    // devSourcemap: true,
-    preprocessorOptions: {
-      sass: {
-        api: 'modern-compiler',
-      },
-    },
+    // with https://github.com/vitejs/vite/pull/17938 this works
+    devSourcemap: true,
+    // with https://github.com/vitejs/vite/pull/17938 we need to remove this entry
+    // preprocessorOptions: {
+    //   sass: {
+    //     api: 'modern-compiler',
+    //   },
+    // },
     //preprocessorMaxWorkers: true,
   },
   plugins: [
