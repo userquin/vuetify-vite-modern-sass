@@ -23,7 +23,6 @@ export function VuetifyStylesPlugin(options: Options) {
     },
     async resolveId (source, importer, { custom }) {
       if (
-        configFile &&
         source === 'vuetify/styles' || (
           importer &&
           source.endsWith('.css') &&
