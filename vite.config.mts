@@ -15,6 +15,7 @@ export default defineConfig({
         api: 'modern-compiler',
       },
     },
+    //preprocessorMaxWorkers: true,
   },
   plugins: [
     VueRouter(),
