@@ -15,8 +15,8 @@
                   <h1 class="text-h4 font-weight-medium">Welcome back</h1>
                   <p class="text-body-1 text-medium-emphasis mt-2">
                     Don't have an account?
-                    <NuxtLink class="font-weight-medium text-primary"
-                    >Sign up</NuxtLink
+                    <RouterLink class="font-weight-medium text-primary"
+                     to="#">Sign up</RouterLink
                     >
                   </p>
                 </div>
@@ -44,9 +44,11 @@
                     :type="passwordType"
                   />
                   <p class="text-medium-emphasis text-body-2 mt-3">
-                    <NuxtLink class="text-primary font-weight-medium"
-                    >Forgot password?</NuxtLink
+                    <RouterLink
+                      class="text-primary font-weight-medium" to="#"
                     >
+                      Forgot password?
+                    </RouterLink>
                   </p>
                   <div class="mt-10">
                     <VBtn
@@ -74,6 +76,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
+import FormLabel from "@/components/FormLabel.vue";
 
 const email = ref('');
 const password = ref('');

@@ -6,6 +6,7 @@ import VueRouter from 'unplugin-vue-router/vite'
 import Inspect from 'vite-plugin-inspect'
 import { defineConfig } from 'vite'
 import { fileURLToPath, URL } from 'node:url'
+import { VuetifyStylesPlugin } from './plugins/vuetify'
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -28,6 +29,10 @@ export default defineConfig({
     // https://github.com/vuetifyjs/vuetify-loader/tree/master/packages/vite-plugin#readme
     Vuetify({
       autoImport: true,
+      styles: false,
+    }),
+    VuetifyStylesPlugin({
+      // styles: 'sass',
       styles: {
         configFile: 'src/styles/settings.scss',
       },
