@@ -2,6 +2,7 @@ import type { Plugin } from 'vite'
 import type {Options } from '@vuetify/loader-shared'
 import path from 'upath'
 import { resolveVuetifyBase, normalizePath, isObject } from '@vuetify/loader-shared'
+import {pathToFileURL} from "node:url";
 
 export function VuetifyStylesPlugin(options: Options) {
   let configFile: string | undefined
@@ -41,7 +42,7 @@ export function VuetifyStylesPlugin(options: Options) {
         const target = resolution.id.replace(/\.css$/, '.sass')
         tempFiles.set(target, isNone
           ? ''
-          : `@use "${normalizePath(configFile)}"\n@use "${resolution.id}"`
+          : `@use "${pathToFileURL(configFile).href}"\n@use "${pathToFileURL(resolution.id).href}"`
         )
         return target
       }
