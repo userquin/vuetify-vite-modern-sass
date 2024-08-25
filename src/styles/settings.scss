@@ -5,7 +5,7 @@
  */
 
 // https://vuetifyjs.com/features/sass-variables/`
- @forward 'vuetify/settings' with (
+ @use 'vuetify/settings' with (
    /*$utilities: false,*/
    /*$color-pack: false,*/
    $field-font-size: 15px,

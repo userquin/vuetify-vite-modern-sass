@@ -32,6 +32,7 @@ export default defineConfig({
       styles: false,
     }),
     VuetifyStylesPlugin({
+      // styles: 'none',
       // styles: 'sass',
       styles: {
         configFile: 'src/styles/settings.scss',

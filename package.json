@@ -4,6 +4,7 @@
   "packageManager": "pnpm@9.8.0",
   "scripts": {
     "dev": "vite",
+    "dev:sourcemap": "DEBUG=vite:sourcemap vite",
     "build": "vue-tsc --noEmit && vite build",
     "preview": "vite preview",
     "lint": "eslint . --fix --ignore-path .gitignore"

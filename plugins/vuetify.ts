@@ -1,25 +1,41 @@
 import type { Plugin } from 'vite'
-import type {Options } from '@vuetify/loader-shared'
+import type { ImportPluginOptions } from '@vuetify/loader-shared'
 import path from 'upath'
 import { resolveVuetifyBase, normalizePath, isObject } from '@vuetify/loader-shared'
-import {pathToFileURL} from "node:url";
+import { pathToFileURL } from 'node:url'
+import { lstat, mkdir, readFile, writeFile } from 'node:fs/promises'
 
-export function VuetifyStylesPlugin(options: Options) {
+export interface VuetifyOptions {
+  autoImport?: ImportPluginOptions
+  styles?: true | 'none' | 'sass' | {
+    configFile: string
+    useViteFileImport?: boolean
+  }
+}
+
+export function VuetifyStylesPlugin(options: VuetifyOptions) {
   let configFile: string | undefined
+  let cacheDir: string | undefined
   const vuetifyBase = resolveVuetifyBase()
-  const tempFiles = new Map<string, string>()
+  const noneFiles = new Set<string>()
   const isNone = options.styles === 'none'
-  const usingSassVariables = isNone ? false : isObject(options.styles)
+  let fileImport = false
   return {
     name: 'vuetify-styles',
     enforce: 'pre',
-    configResolved (config) {
+    async configResolved (config) {
       if (isObject(options.styles)) {
+        const root = config.root || process.cwd()
+        cacheDir = path.resolve(config.cacheDir ?? path.join(root, 'node_modules/.vite'), 'vuetify-styles')
+        fileImport = options.styles.useViteFileImport === true
         if (path.isAbsolute(options.styles.configFile)) {
           configFile = path.resolve(options.styles.configFile)
         } else {
-          configFile = path.resolve(path.join(config.root || process.cwd(), options.styles.configFile))
+          configFile = path.resolve(path.join(root, options.styles.configFile))
         }
+        configFile = fileImport
+          ? pathToFileURL(configFile).href
+          : normalizePath(configFile)
       }
     },
     async resolveId (source, importer, { custom }) {
@@ -32,24 +48,35 @@ export function VuetifyStylesPlugin(options: Options) {
       ) {
         if (options.styles === 'sass') {
           const target = source.replace(/\.css$/, '.sass')
-          return this.resolve(target, importer, { skipSelf: true, custom })
+          return this.resolve(target, importer, {skipSelf: true, custom})
         }
 
-        const resolution = await this.resolve(source, importer, { skipSelf: true, custom })
+        const resolution = await this.resolve(source, importer, {skipSelf: true, custom})
         if (!resolution)
           return
 
         const target = resolution.id.replace(/\.css$/, '.sass')
-        tempFiles.set(target, isNone
-          ? ''
-          : `@use "${pathToFileURL(configFile).href}"\n@use "${pathToFileURL(resolution.id).href}"`
+        if (isNone) {
+          noneFiles.add(target)
+          return target
+        }
+
+        const tempFile = path.resolve(
+          cacheDir,
+          path.relative(path.join(vuetifyBase, 'lib'), target),
         )
-        return target
+        await mkdir(path.dirname(tempFile), { recursive: true })
+        await writeFile(
+          path.resolve(cacheDir, tempFile),
+          `@use "${configFile}"\n@use "${fileImport ? pathToFileURL(target).href : normalizePath(target)}"`,
+          'utf-8',
+        )
+        return tempFile
       }
     },
     load(id) {
-      return isNone || usingSassVariables ? tempFiles.get(id) : undefined
-    },
+      return isNone && noneFiles.has(id) ? '' : undefined
+    }
   } satisfies Plugin
 }
 
