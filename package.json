@@ -4,6 +4,7 @@
   "packageManager": "pnpm@9.8.0",
   "scripts": {
     "dev": "vite",
+    "dev:sourcemap": "DEBUG=vite:sourcemap vite",
     "build": "vue-tsc --noEmit && vite build",
     "preview": "vite preview",
     "lint": "eslint . --fix --ignore-path .gitignore"
@@ -20,6 +21,7 @@
     "@types/node": "^20.14.10",
     "@vitejs/plugin-vue": "^5.0.5",
     "@vue/eslint-config-typescript": "^13.0.0",
+    "@vuetify/loader-shared": "^2.0.3",
     "eslint": "^8.57.0",
     "eslint-config-standard": "^17.1.0",
     "eslint-plugin-import": "^2.29.1",
@@ -32,6 +34,7 @@
     "unplugin-fonts": "^1.1.1",
     "unplugin-vue-components": "^0.27.2",
     "unplugin-vue-router": "^0.10.0",
+    "upath": "^2.0.1",
     "vite": "https://pkg.pr.new/vite@561b940",
     "vite-plugin-inspect": "^0.8.7",
     "vite-plugin-vuetify": "^2.0.4",
