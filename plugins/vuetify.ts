@@ -74,9 +74,11 @@ export function VuetifyStylesPlugin(options: VuetifyOptions) {
         return `${PREFIX}${path.relative(vuetifyBase, target)}${ssr ? '?inline' : ''}`
       }
     },
-    load(id) {
+    load(id, options) {
       if (sassVariables && id.startsWith(PREFIX)) {
-        const target = path.resolve(vuetifyBase, id.slice(PREFIX.length))
+        let target = path.resolve(vuetifyBase, id.slice(PREFIX.length))
+        if (options?.ssr)
+          target = target.replace(/\?inline$/, '')
         return {
           code: `@use "${configFile}"\n@use "${fileImport ? pathToFileURL(target).href : normalizePath(target)}"`,
           map: {
