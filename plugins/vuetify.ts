@@ -3,8 +3,6 @@ import type { ImportPluginOptions } from '@vuetify/loader-shared'
 import path from 'upath'
 import { resolveVuetifyBase, normalizePath, isObject } from '@vuetify/loader-shared'
 import { pathToFileURL } from 'node:url'
-import { lstat, mkdir, readFile, writeFile } from 'node:fs/promises'
-import {URLSearchParams} from "url";
 
 export interface VuetifyOptions {
   autoImport?: ImportPluginOptions
@@ -44,7 +42,10 @@ export function VuetifyStylesPlugin(options: VuetifyOptions) {
           : normalizePath(configFile)
       }
     },
-    async resolveId (source, importer, { custom }) {
+    async resolveId (source, importer, { custom, ssr }) {
+      if (source.startsWith(PREFIX)) {
+        return source
+      }
       if (
         source === 'vuetify/styles' || (
           importer &&
@@ -67,19 +68,10 @@ export function VuetifyStylesPlugin(options: VuetifyOptions) {
           return target
         }
 
-        return `${PREFIX}${path.relative(vuetifyBase, target)}`
-
-        /*const tempFile = path.resolve(
-          cacheDir,
-          path.relative(path.join(vuetifyBase, 'lib'), target),
-        )
-        await mkdir(path.dirname(tempFile), { recursive: true })
-        await writeFile(
-          path.resolve(cacheDir, tempFile),
-          `@use "${configFile}"\n@use "${fileImport ? pathToFileURL(target).href : normalizePath(target)}"`,
-          'utf-8',
-        )
-        return tempFile*/
+        // Avoid writing the asset in the html when SSR enabled:
+        // https://vitejs.dev/guide/features#disabling-css-injection-into-the-page
+        // This will prevent vue router warnings for the virtual sass file in Nuxt with SSR.
+        return `${PREFIX}${path.relative(vuetifyBase, target)}${ssr ? '?inline' : ''}`
       }
     },
     load(id) {
@@ -93,64 +85,8 @@ export function VuetifyStylesPlugin(options: VuetifyOptions) {
         }
       }
       return isNone && noneFiles.has(id) ? '' : undefined
-    }/*,
-    transform(_, id) {
-      if (sassVariables && id.startsWith('vuetify-styles/')) {
-        const target = path.resolve(vuetifyBase, id.slice('vuetify-styles/'.length))
-        return {
-          code: `@use "${configFile}"\n@use "${fileImport ? pathToFileURL(target).href : normalizePath(target)}"`,
-          map: {
-            mappings: '',
-          },
-        }
-      }
-    }*/
-    /*,
-    transform(code, id) {
-      if (sassVariables) {
-        const { query, path } = parseId(id)
-        const isVueVirtual = query && 'vue' in query
-        const isVueFile = !isVueVirtual &&
-          !/^import { render as _sfc_render } from ".*"$/m.test(code)
-        const isVueTemplate = isVueVirtual && (
-          query.type === 'template' ||
-          (query.type === 'script' && query.setup === 'true')
-        )
-
-        if (path.endsWith('.js') && (isVueFile || isVueTemplate)) {
-          const regex = new RegExp(`(import\\s+['"](${vuetifyBase}(.*)).css['"])`)
-          let match = regex.exec(code)
-          if (match) {
-            do {
-              code = code.replace(
-                match[1],
-                `import "#vuetify-styles${match[3]}.sass"`,
-              )
-              match = regex.exec(code)
-            } while (match)
-            if (path.endsWith('_VApp_index__mjs.js')) {
-              console.log(code)
-            }
-            return {
-              code,
-              map: null,
-            }
-          }
-        }
-
-        return null
-      }
-    },*/
+    },
   } satisfies Plugin
-}
-
-function parseId (id: string) {
-  const [pathname, query] = id.split('?')
-
-  return {
-    query: query ? Object.fromEntries(new URLSearchParams(query)) : null,
-    path: pathname ?? id
-  }
 }
 
 function isSubdir (root: string, test: string) {
