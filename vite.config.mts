@@ -29,7 +29,6 @@ export default defineConfig({
     // https://github.com/vuetifyjs/vuetify-loader/tree/master/packages/vite-plugin#readme
     Vuetify({
       autoImport: true,
-      styles: false,
     }),
     VuetifyStylesPlugin({
       // styles: 'none',

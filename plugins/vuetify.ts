@@ -5,18 +5,19 @@ import { resolveVuetifyBase, normalizePath, isObject } from '@vuetify/loader-sha
 import { pathToFileURL } from 'node:url'
 
 export interface VuetifyOptions {
-  autoImport?: ImportPluginOptions
   styles?: true | 'none' | 'sass' | {
     configFile: string
     useViteFileImport?: boolean
   }
 }
 
-export function VuetifyStylesPlugin(options: VuetifyOptions) {
+export function VuetifyStylesPlugin(options?: VuetifyOptions) {
+  const { styles = true } = options ?? {}
   let configFile: string | undefined
   // let cacheDir: string | undefined
   const vuetifyBase = resolveVuetifyBase()
   const noneFiles = new Set<string>()
+  let isDisabled = true
   let isNone = false
   let sassVariables = false
   let fileImport = false
@@ -27,23 +28,29 @@ export function VuetifyStylesPlugin(options: VuetifyOptions) {
     name: 'vuetify-styles',
     enforce: 'pre',
     async configResolved (config) {
-      isNone = options.styles === 'none'
-      if (isObject(options.styles)) {
-        sassVariables = true
-        const root = config.root || process.cwd()
-        // cacheDir = path.resolve(config.cacheDir, 'vuetify-styles')
-        fileImport = options.styles.useViteFileImport === true
-        if (path.isAbsolute(options.styles.configFile)) {
-          configFile = path.resolve(options.styles.configFile)
-        } else {
-          configFile = path.resolve(path.join(root, options.styles.configFile))
+      isDisabled = styles === true
+      if (!isDisabled) {
+        isNone = styles === 'none'
+        if (isObject(options.styles)) {
+          sassVariables = true
+          const root = config.root || process.cwd()
+          // cacheDir = path.resolve(config.cacheDir, 'vuetify-styles')
+          fileImport = options.styles.useViteFileImport === true
+          if (path.isAbsolute(options.styles.configFile)) {
+            configFile = path.resolve(options.styles.configFile)
+          } else {
+            configFile = path.resolve(path.join(root, options.styles.configFile))
+          }
+          configFile = fileImport
+            ? pathToFileURL(configFile).href
+            : normalizePath(configFile)
         }
-        configFile = fileImport
-          ? pathToFileURL(configFile).href
-          : normalizePath(configFile)
       }
     },
     async resolveId (source, importer, { custom, ssr }) {
+      if (isDisabled)
+        return undefined
+
       if (source.startsWith(PREFIX) || source.startsWith(SSR_PREFIX)) {
         return source
       }
@@ -74,6 +81,9 @@ export function VuetifyStylesPlugin(options: VuetifyOptions) {
       }
     },
     load(id) {
+      if (isDisabled)
+        return undefined
+
       if (sassVariables) {
         const target = id.startsWith(PREFIX)
           ? path.resolve(vuetifyBase, id.slice(PREFIX.length))
